@@ -31,7 +31,10 @@ app.use("/api/comments", commentRoutes);
 async function main() {
   await mongoose.connect(process.env.MONGODB_URL);
 }
-main().then(() => console.log("Mongodb conectado")).catch(err => console.log(err));
+main()
+  .then(() => console.log("✅ MongoDB conectado"))
+  .catch(err => console.error("❌ Error conectando a MongoDB:", err));
+
 
 app.get('/', (req, res) => {
   res.send('Backend funcionando!')
