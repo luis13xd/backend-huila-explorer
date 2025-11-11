@@ -14,7 +14,10 @@ app.use(bodyParser.json({limit: '10mb'}));
 app.use(bodyParser.urlencoded({limit: '10mb', extended: true}));
 
 app.use(cors({
-  origin: true,
+  origin: [
+      "http://localhost:5173", // durante desarrollo
+      "https://huila-explorer.netlify.app", // cuando despliegues
+    ],
   credentials: true, //establece set cookies
 }));
 
