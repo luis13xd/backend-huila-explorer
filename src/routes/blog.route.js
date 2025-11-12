@@ -119,27 +119,42 @@ router.delete("/:id", verifyToken, isAdmin, async(req, res) => {
 })
 
 //busca titulos similares al nuestro a travez del id
-router.get("/related/:id", async(req, res) => {
-    try {
-        const {id} = req.params;
-        if(!id) {
-            return res.status(400).send({ message: "Post id is required" })
-        }
-        const blog = await Blog.findById(id);
-        if(!blog) {
-            return res.status(404).send({ message: "Post no encontrado" })
-        }
-        const titleRegex = new RegExp(blog.title.split(' ').join('|'), 'i');
-        const relatedQuery = {
-            _id: {$ne: id},
-            title: {$regex: titleRegex}
-        }
-        const relatedPost = await Blog.find(relatedQuery)
-        res.status(200).send(relatedPost)
-    } catch (error) {
-        console.error("Error obteniendo comentarios post: ", error);
-        res.status(500).send({ message: "Error obteniendo comentarios post" })
+router.get("/related/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).send({ message: "Post id is required" });
     }
-})
+
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      return res.status(404).send({ message: "Post no encontrado" });
+    }
+
+    // Buscar blogs de la misma categoría (o descripción parecida)
+    const relatedQuery = {
+      _id: { $ne: id },
+      category: blog.category, // mismo tipo de sitio
+    };
+
+    const relatedPost = await Blog.find(relatedQuery).limit(4); // puedes ajustar el número
+
+    // Si no hay resultados por categoría, busca por palabra clave del título como respaldo
+    if (relatedPost.length === 0) {
+      const titleRegex = new RegExp(blog.title.split(" ").join("|"), "i");
+      const backupPosts = await Blog.find({
+        _id: { $ne: id },
+        title: { $regex: titleRegex },
+      }).limit(4);
+
+      return res.status(200).send(backupPosts);
+    }
+
+    res.status(200).send(relatedPost);
+  } catch (error) {
+    console.error("Error obteniendo sitios relacionados:", error);
+    res.status(500).send({ message: "Error obteniendo sitios relacionados" });
+  }
+});
 
 module.exports = router;
